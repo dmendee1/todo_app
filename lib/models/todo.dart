@@ -21,4 +21,12 @@ class ToDo {
       ToDo(id: '08', todoText: 'Study 4H'),
     ];
   }
+
+  ToDo.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        todoText = json['todoText'],
+        isDone = json['isDone'];
+
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'todoText': todoText, 'isDone': isDone};
 }
