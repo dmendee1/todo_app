@@ -5,15 +5,22 @@ import '../widgets/todo_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-class Home extends StatefulWidget {
+class Home extends StatelessWidget {
   @override
-  State<Home> createState() => _HomeState();
+  Widget build(BuildContext context) {
+    return Scaffold(body: HomeBody());
+  }
 }
 
-class _HomeState extends State<Home> {
-  // const Home({Key? key}) : super(key: key);
+class HomeBody extends StatefulWidget {
+  @override
+  State<HomeBody> createState() => _HomeState();
+}
 
+class _HomeState extends State<HomeBody> {
+  // const Home({Key? key}) : super(key: key);
   late FocusNode _nodeSearchBox, _nodeAddBox;
+  final String todayDate = DateTime.now().toString().substring(0, 10);
 
   List<ToDo> todoList = [];
   String localText = "";
@@ -35,6 +42,9 @@ class _HomeState extends State<Home> {
     FocusScope.of(context).unfocus();
     _nodeSearchBox.dispose();
     _nodeAddBox.dispose();
+    syncToLocalStorage();
+    this.todoList.clear();
+    this._foundToDo.clear();
     // Clean up the focus node when the Form is disposed.
     super.dispose();
   }
@@ -45,7 +55,7 @@ class _HomeState extends State<Home> {
       // pref.setString("todolist", todoList[0].todoText);
       localText = pref.get("todolist") != null && !pref.get("todolist").isEmpty
           ? pref.get("todolist")
-          : "4455";
+          : [];
       print("localText: " + localText);
       var map = jsonDecode(localText) as List;
       // String cachedToDo = jsonDecode(localText);
@@ -59,10 +69,16 @@ class _HomeState extends State<Home> {
     });
   }
 
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   super.didChangeAppLifecycleState(state);
+  // }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
+      drawer: _buiildMenu(),
       backgroundColor: tdBGColor,
       appBar: _buildAppBar(),
       body: GestureDetector(
@@ -87,9 +103,9 @@ class _HomeState extends State<Home> {
                         Container(
                           margin: EdgeInsets.only(top: 30, bottom: 20),
                           child: Text(
-                            'App todo',
+                            "- " + todayDate + " -",
                             style: TextStyle(
-                                fontSize: 30, fontWeight: FontWeight.w500),
+                                fontSize: 22, fontWeight: FontWeight.w500),
                           ),
                         ),
                         for (ToDo todo in _foundToDo)
@@ -134,6 +150,9 @@ class _HomeState extends State<Home> {
                       child: TextField(
                         controller: _todoController,
                         focusNode: _nodeAddBox,
+                        onSubmitted: (value) {
+                          _addTodoItem(_todoController.text);
+                        },
                         decoration: InputDecoration(
                           hintText: 'Add new todo item',
                           border: InputBorder.none,
@@ -163,34 +182,69 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(
-                      bottom: 20,
-                      right: 20,
-                    ),
-                    child: ElevatedButton(
-                      child: Text(
-                        '>',
-                        style: TextStyle(
-                          fontSize: 40,
-                        ),
-                      ),
-                      onPressed: () {
-                        if (_todoController.text != null &&
-                            _todoController.text.length > 0) {
-                          _addTodoItem(_todoController.text);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: tdBlue,
-                        minimumSize: Size(60, 60),
-                        elevation: 10,
-                      ),
-                    ),
-                  )
+                  // Container(
+                  //   margin: EdgeInsets.only(
+                  //     bottom: 20,
+                  //     right: 20,
+                  //   ),
+                  //   child: ElevatedButton(
+                  //     child: Text(
+                  //       'U',
+                  //       style: TextStyle(
+                  //         fontSize: 40,
+                  //       ),
+                  //     ),
+                  //     onPressed: () {
+                  //       if (_todoController.text != null &&
+                  //           _todoController.text.length > 0) {
+                  //         _addTodoItem(_todoController.text);
+                  //       }
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       primary: tdBlue,
+                  //       minimumSize: Size(60, 60),
+                  //       elevation: 10,
+                  //     ),
+                  //   ),
+                  // )
                 ],
               ),
             )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Drawer _buiildMenu() {
+    return Drawer(
+      child: Container(
+        margin: EdgeInsets.only(left: 10, top: 80, right: 10, bottom: 0),
+        child: Column(
+          children: [
+            Container(
+              child: Text(
+                "Drawer header",
+                style: TextStyle(),
+              ),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            ),
+            Expanded(
+              child: ListView(
+                // Important: Remove any padding from the ListView.
+                padding: EdgeInsets.zero,
+                children: [
+                  ListTile(
+                    title: Text(todayDate),
+                    onTap: () {
+                      // Update the state of the app.
+                      // ...
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -214,6 +268,7 @@ class _HomeState extends State<Home> {
   void syncToLocalStorage() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.setString("todolist", jsonEncode(todoList));
+    print("syncccccc: ");
   }
 
   void _addTodoItem(String todoText) {
@@ -272,12 +327,12 @@ class _HomeState extends State<Home> {
     return AppBar(
       backgroundColor: tdBGColor,
       elevation: 0,
-      title: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Icon(
-          Icons.menu,
-          color: tdBlack,
-          size: 30,
-        ),
+      title: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        // Icon(
+        //   Icons.menu,
+        //   color: tdBlack,
+        //   size: 30,
+        // ),
         Container(
           height: 40,
           width: 40,
